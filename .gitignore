@@ -1,0 +1,12 @@
+# Qt Creator / CMake 建置輸出
+build/
+build-*/
+out/
+CMakeLists.txt.user*
+*.user
+.qtcreator/
+.vs/
+.vscode/
+
+# build_installer.bat 產生的安裝程式
+dist/

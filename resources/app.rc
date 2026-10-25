@@ -1,0 +1,2 @@
+// Windows 執行檔圖示（檔案總管中顯示）
+IDI_ICON1 ICON "app.ico"

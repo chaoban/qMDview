@@ -1,0 +1,76 @@
+qMDView - Third-Party Software Notices / 第三方軟體授權聲明
+Copyright (C) 2026 SAISAI.Dev
+Contact / 聯絡信箱: aisais.dev@gmail.com
+
+qMDView 本身由 SAISAI.Dev 開發。本軟體使用並隨附下列第三方元件，
+各元件依其原授權條款使用，著作權屬於各自的權利人。
+
+qMDView is developed by SAISAI.Dev. It uses and redistributes the
+third-party components listed below, each under its own license.
+Copyright in those components remains with their respective owners.
+
+----------------------------------------------------------------------
+1. Qt 6  (Qt Core, Qt Gui, Qt Widgets and their plugins)
+----------------------------------------------------------------------
+Copyright (C) The Qt Company Ltd. and other contributors.
+
+License: GNU Lesser General Public License version 3 (LGPL-3.0).
+See LGPL-3.0.txt and GPL-3.0.txt in this folder.
+
+- Qt is used unmodified and is dynamically linked. The Qt DLLs in the
+  installation folder (Qt6*.dll and the plugin folders) may be replaced
+  with compatible versions you build yourself.
+- Qt source code: https://download.qt.io/archive/qt/
+  Qt 6 open-source download: https://www.qt.io/download-open-source
+- Qt includes further third-party code (for example the md4c Markdown
+  parser, MIT License, used by qMDView for rendering). The complete list
+  and their licenses: https://doc.qt.io/qt-6/licenses-used-in-qt.html
+
+Qt 以 LGPL v3 授權使用，未經修改並以動態連結（DLL）方式載入；
+使用者可自行以相容版本替換安裝資料夾中的 Qt DLL。
+Qt 原始碼可由上方網址取得。
+
+----------------------------------------------------------------------
+2. MinGW-w64 GCC runtime  (libgcc_s_seh-1.dll, libstdc++-6.dll)
+----------------------------------------------------------------------
+Copyright (C) Free Software Foundation, Inc.
+
+License: GNU General Public License version 3 with the
+GCC Runtime Library Exception, version 3.1.
+https://www.gnu.org/licenses/gcc-exception-3.1.html
+Source code: https://gcc.gnu.org/
+
+----------------------------------------------------------------------
+3. MinGW-w64 winpthreads  (libwinpthread-1.dll)
+----------------------------------------------------------------------
+Copyright (C) mingw-w64 project and contributors.
+
+License: MIT-style license. Full text:
+https://github.com/mingw-w64/mingw-w64/blob/master/mingw-w64-libraries/winpthreads/COPYING
+Source code: https://www.mingw-w64.org/
+
+----------------------------------------------------------------------
+Microsoft Store 版本說明 / Microsoft Store edition
+----------------------------------------------------------------------
+Microsoft Store 版與一般安裝版使用相同、未經修改、以動態連結載入的
+Qt DLL。Store 安裝的程式位於 Windows 保護的資料夾，無法直接替換其中
+的檔案。若你取得了 Store 版，並希望改用自行修改或建置的 Qt 程式庫，
+請來信 aisais.dev@gmail.com，我們會免費提供同一版本的一般安裝版
+（安裝程式或可攜資料夾），其中的 Qt DLL 可自行替換。
+
+上述 LGPL v3 賦予的權利（包括修改 Qt 程式庫，以及為了對這些修改
+除錯而進行的逆向工程）不受 Microsoft Store 標準應用程式授權條款或
+本軟體其他授權條款的限制。
+
+The Microsoft Store edition uses the same unmodified, dynamically
+linked Qt DLLs as the regular installer. Windows keeps Store apps in a
+protected folder, so those files cannot be replaced in place. If you
+obtained the Store edition and want to use a modified or self-built
+Qt library, write to aisais.dev@gmail.com and you will receive the
+same version as a regular installer or portable folder, free of
+charge, in which the Qt DLLs can be replaced.
+
+The rights granted by the LGPL v3 (including modifying the Qt library
+and reverse engineering for debugging such modifications) are not
+restricted by the Microsoft Store Standard Application License Terms
+or by any other license terms of this software.
