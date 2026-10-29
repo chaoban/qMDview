@@ -19,6 +19,7 @@
 #include <QFileSystemModel>
 #include <QFileSystemWatcher>
 #include <QFontDatabase>
+#include <QItemSelectionModel>
 #include <QLabel>
 #include <QMessageBox>
 #include <QMimeData>
@@ -107,8 +108,10 @@ MainWindow::MainWindow(QWidget *parent)
         if (!m_loading)
             m_renderTimer.start();
     });
-    connect(ui->editor->document(), &QTextDocument::modificationChanged,
-            this, &QWidget::setWindowModified);
+    connect(ui->editor->document(), &QTextDocument::modificationChanged, this, [this] {
+        updateTitle();
+        updateStatus();
+    });
     connect(ui->editor->verticalScrollBar(), &QScrollBar::valueChanged,
             this, &MainWindow::syncPreviewToEditor);
 
@@ -175,11 +178,13 @@ void MainWindow::setupActions()
     ui->actionOpenFolder->setIcon(themed("folder-open", QStyle::SP_DirOpenIcon));
     ui->actionSave->setIcon(themed("document-save", QStyle::SP_DialogSaveButton));
     ui->actionReload->setIcon(themed("view-refresh", QStyle::SP_BrowserReload));
+    ui->actionClose->setIcon(themed("document-close", QStyle::SP_DialogCloseButton));
     ui->actionToggleEditor->setIcon(themed("document-edit", QStyle::SP_FileDialogDetailedView));
     ui->actionFind->setIcon(themed("edit-find", QStyle::SP_FileDialogContentsView));
 
     ui->actionZoomIn->setShortcuts({ QKeySequence::ZoomIn, QKeySequence(Qt::CTRL | Qt::Key_Equal) });
     ui->actionZoomOut->setShortcuts(QKeySequence::ZoomOut);
+    ui->actionClose->setShortcuts({ QKeySequence(Qt::CTRL | Qt::Key_W), QKeySequence(Qt::CTRL | Qt::Key_F4) });
 
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::newFile);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::openFileDialog);
@@ -187,6 +192,7 @@ void MainWindow::setupActions()
     connect(ui->actionSave, &QAction::triggered, this, &MainWindow::save);
     connect(ui->actionSaveAs, &QAction::triggered, this, &MainWindow::saveAs);
     connect(ui->actionReload, &QAction::triggered, this, &MainWindow::reload);
+    connect(ui->actionClose, &QAction::triggered, this, &MainWindow::closeFile);
     connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
 
     connect(ui->actionToggleEditor, &QAction::toggled, this, &MainWindow::toggleEditor);
@@ -376,6 +382,30 @@ void MainWindow::newFile()
     ui->editor->setFocus();
 }
 
+void MainWindow::closeFile()
+{
+    if (!hasDocument() || !maybeSave())
+        return;
+
+    const QString closed = m_currentFile;
+    m_format = TextFormat();
+    setCurrentFile(QString());   // 停止監看
+    TextFileContent empty;
+    empty.ok = true;
+    applyContent(empty, false);  // 清空編輯器與預覽；目錄隨預覽一起清空
+
+    if (QItemSelectionModel *selection = ui->fileTree->selectionModel()) {
+        selection->clearSelection();
+        selection->setCurrentIndex(QModelIndex(), QItemSelectionModel::NoUpdate);
+    }
+
+    // 立刻記下「沒有開啟檔案」：下次啟動只開回資料夾，不再自動載入這個檔案
+    QSettings().setValue(QStringLiteral("session/file"), QString());
+
+    if (!closed.isEmpty())
+        statusBar()->showMessage(tr("已關閉 %1").arg(QDir::toNativeSeparators(closed)), 3000);
+}
+
 void MainWindow::openFileDialog()
 {
     QString dir = !m_currentFile.isEmpty() ? QFileInfo(m_currentFile).absolutePath() : m_rootFolder;
@@ -549,6 +579,12 @@ void MainWindow::onFileChangedOnDisk()
 QString MainWindow::displayName() const
 {
     return m_currentFile.isEmpty() ? tr("未命名") : QFileInfo(m_currentFile).fileName();
+}
+
+bool MainWindow::hasDocument() const
+{
+    const QTextDocument *doc = ui->editor->document();
+    return !m_currentFile.isEmpty() || doc->isModified() || !doc->isEmpty();
 }
 
 // ============================================================================
@@ -750,13 +786,18 @@ void MainWindow::clearFindHighlights()
 
 void MainWindow::updateTitle()
 {
-    setWindowTitle(QStringLiteral("%1[*] — qMDView").arg(displayName()));
+    // 沒有開啟任何檔案（關閉檔案後、或啟動時沒有上次的檔案）只顯示程式名稱
+    const bool open = hasDocument();
+    setWindowTitle(open ? QStringLiteral("%1[*] — qMDView").arg(displayName())
+                        : QStringLiteral("qMDView[*]"));
     setWindowModified(ui->editor->document()->isModified());
+    ui->actionClose->setEnabled(open);
 }
 
 void MainWindow::updateStatus()
 {
-    m_formatLabel->setText(m_format.displayName());
+    if (m_formatLabel)
+        m_formatLabel->setText(hasDocument() ? m_format.displayName() : QString());
 }
 
 void MainWindow::addRecentFile(const QString &path)

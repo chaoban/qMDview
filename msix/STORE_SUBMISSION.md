@@ -106,8 +106,8 @@ C++ 原始碼不需要修改，原因：
 
 **What's new in this version**（更新提交才需要填；第一次上架留空）：
 
-- 繁體中文：`新增英文介面：預設依 Windows 顯示語言，也可在「檢視 → 語言」切換。`
-- English：`Added an English user interface. It follows your Windows display language and can be changed in View > Language.`
+- 繁體中文：`新增英文介面：預設依 Windows 顯示語言，也可在「檢視 → 語言」切換。新增「檔案 → 關閉檔案」（Ctrl+W），關閉後下次啟動不會再自動開啟該檔案。`
+- English：`Added an English user interface. It follows your Windows display language and can be changed in View > Language. Added File > Close File (Ctrl+W); a closed file is no longer reopened the next time the app starts.`
 
 英文清單的截圖要用英文介面拍：「檢視 → 語言 → English」重新啟動後，開啟 `samples\sample-en.md`（英文版示範文件）所在資料夾再截圖。
 
@@ -392,7 +392,7 @@ How to test:
 
 ```
 runFullTrust is required because qMDView is a classic Win32 desktop application (Qt 6, C++) that runs with EntryPoint Windows.FullTrustApplication; it cannot run without this capability.
-The app only reads and writes the Markdown files that the user explicitly opens or saves, and stores its own window layout and recent-file list in the user's settings. It does not install drivers or services, does not run background tasks, and does not collect or transmit personal data.
+The app only reads and writes the Markdown files that the user explicitly opens or saves, and stores its own settings (window layout, recent-file list and UI language) in the user's settings. It does not install drivers or services, does not run background tasks, and does not collect or transmit personal data.
 ```
 
 **Submission notification audience**：保留預設。

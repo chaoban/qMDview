@@ -39,6 +39,7 @@ protected:
 private:
     // ---- 選單動作 ----
     void newFile();
+    void closeFile();
     void openFileDialog();
     void openFolderDialog();
     bool save();
@@ -58,6 +59,7 @@ private:
     void watchFile(const QString &path);
     void onFileChangedOnDisk();
     QString displayName() const;
+    bool hasDocument() const;   // 有開啟的檔案，或編輯器中有內容
 
     // ---- 預覽 / 目錄 ----
     void renderPreview(bool keepScroll);
