@@ -393,6 +393,11 @@
         <translation>Closed %1</translation>
     </message>
     <message>
+        <location filename="../src/mainwindow.cpp" line="814"/>
+        <source>行 %1，欄 %2</source>
+        <translation>Ln %1, Col %2</translation>
+    </message>
+    <message>
         <location filename="../src/mainwindow.cpp" line="416"/>
         <source>開啟 Markdown 檔案</source>
         <translation>Open Markdown File</translation>

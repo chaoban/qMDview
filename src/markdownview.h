@@ -68,7 +68,9 @@ private:
     qreal headingTop(int index) const;
     QString resolveLocalPath(const QUrl &url) const;
 
-    struct CachedImage { QDateTime modified; QImage image; };
+    // image 為原圖；scaled 為縮到 scaledWidth（像素）後的版本，寬度沒變就直接重用
+    struct CachedImage { QDateTime modified; QImage image; QImage scaled; int scaledWidth = 0; };
+    void trimImageCache(qint64 incomingBytes);
 
     QString m_markdown;
     QString m_baseDir;

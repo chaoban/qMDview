@@ -113,6 +113,28 @@ C++ 原始碼不需要修改，原因：
 
 ---
 
+### 2.6 1.2.0 版：狀態列游標位置與效能改善
+
+版本為 1.2.0（MSIX 1.2.0.0）。內容：編輯模式下狀態列顯示「行／欄」；含圖片的文件編輯時預覽更順（縮圖快取、快取上限 128 MB）；樣式套用略為加速。沒有新增權限或功能宣告，認證備註（3.8）不需修改。
+
+| 步驟 | 在哪裡做 | 內容 |
+|---|---|---|
+| 1 | 電腦（檔案總管） | 雙擊 `qMDView_ms\build_release.bat` → 產出 `dist\qMDView-1.2.0-setup.exe` 與 `dist\qMDView-1.2.0.0-x64.msix`（約 1 分鐘；失敗時看 `dist\build_release.log`） |
+| 2 | 電腦 | 執行 `qMDView-1.2.0-setup.exe` 覆蓋安裝測試：開檔 → `Ctrl+E` 開編輯器，狀態列右側出現「行 N，欄 M」；移動游標與輸入時會更新；關閉編輯器後消失；切換英文介面顯示 Ln／Col；含大圖片的文件連續打字、拖曳視窗寬度，圖片仍正常縮放 |
+| 3 | 網頁（Partner Center） | qMDView：上一個提交已完成認證 → 按「Update」建立新提交 |
+| 4 | 網頁（Partner Center）→ Packages | 上傳 `qMDView-1.2.0.0-x64.msix`，舊套件可移除 |
+| 5 | 網頁（Partner Center）→ Store listings | 繁中與英文清單各填 What's new（下方）；其餘不變 |
+| 6 | 網頁（Partner Center） | Submit to the Store；認證通常 3 個工作天內 |
+
+**What's new in this version**：
+
+- 繁體中文：`編輯模式下，狀態列新增游標所在的行號與欄位顯示。改善含圖片文件的編輯與預覽流暢度。`
+- English：`The status bar now shows the current line and column of the cursor while editing. Improved editing and preview smoothness for documents with images.`
+
+GitHub（見 2.4 之外的流程）：`git add -A`、`git commit`、`git tag v1.2.0`、`git push`、`git push origin v1.2.0`，Release 附上 `setup.exe`（不放 MSIX）。
+
+---
+
 ## 3. Partner Center 逐項填寫
 
 入口：<https://partner.microsoft.com/dashboard> → **Apps and games**。Partner Center 若顯示中文介面，欄位名稱會不同，以下以英文欄位名稱為主、括號附中文說明。

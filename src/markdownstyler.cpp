@@ -276,8 +276,10 @@ void styleBlocks(QTextDocument *doc, const Colors &c, const QFont &codeFont)
                 bf.setLineHeight(150, QTextBlockFormat::ProportionalHeight);
             }
         }
-        cur.setPosition(b.position());
-        cur.setBlockFormat(bf);
+        if (bf != b.blockFormat()) { // 沒變就不寫回，省下大量版面失效
+            cur.setPosition(b.position());
+            cur.setBlockFormat(bf);
+        }
 
         // 先收集再修改，避免修改格式時片段分裂導致迭代器失效
         QVector<Span> spans;

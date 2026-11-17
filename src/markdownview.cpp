@@ -264,6 +264,17 @@ QString MarkdownView::resolveLocalPath(const QUrl &url) const
     return QString(); // http(s) 等遠端資源
 }
 
+void MarkdownView::trimImageCache(qint64 incomingBytes)
+{
+    // 圖片快取上限 128 MB（原圖＋縮圖）；超過就整批淘汰舊的，下次重繪再載入
+    constexpr qint64 kMaxBytes = 128LL * 1024 * 1024;
+    qint64 total = incomingBytes;
+    for (const CachedImage &c : std::as_const(m_imageCache))
+        total += c.image.sizeInBytes() + c.scaled.sizeInBytes();
+    if (total > kMaxBytes)
+        m_imageCache.clear();
+}
+
 QVariant MarkdownView::loadResource(int type, const QUrl &name)
 {
     if (type != QTextDocument::ImageResource)
@@ -278,27 +289,34 @@ QVariant MarkdownView::loadResource(int type, const QUrl &name)
         return QVariant();
 
     m_hasImages = true;
-    QImage image;
-    const auto it = m_imageCache.constFind(fi.absoluteFilePath());
-    if (it != m_imageCache.constEnd() && it->modified == fi.lastModified()) {
-        image = it->image;
-    } else {
-        if (!image.load(fi.absoluteFilePath()))
+    const QString key = fi.absoluteFilePath();
+    auto it = m_imageCache.find(key);
+    if (it == m_imageCache.end() || it->modified != fi.lastModified()) {
+        QImage loaded;
+        if (!loaded.load(key))
             return QVariant();
-        m_imageCache.insert(fi.absoluteFilePath(), { fi.lastModified(), image });
+        trimImageCache(loaded.sizeInBytes());
+        it = m_imageCache.insert(key, CachedImage{ fi.lastModified(), loaded, QImage(), 0 });
     }
 
     // 太寬的圖縮到視窗寬度（依螢幕 DPI 保留清晰度）。
-    // 一律預留垂直捲軸寬度，結果才不會隨捲軸出現與否而變動
+    // 一律預留垂直捲軸寬度，結果才不會隨捲軸出現與否而變動。
+    // 縮放結果會快取：編輯時每次重繪都會重新載入圖片，寬度沒變就不必再縮一次
     const int scrollBarWidth = style()->pixelMetric(QStyle::PM_ScrollBarExtent, nullptr, verticalScrollBar());
     const int maxWidth = width() - 2 * frameWidth() - scrollBarWidth
                          - int(2 * document()->documentMargin()) - 8;
-    if (maxWidth > 64 && image.width() > maxWidth) {
-        const qreal dpr = devicePixelRatioF();
-        image = image.scaledToWidth(qRound(maxWidth * dpr), Qt::SmoothTransformation);
-        image.setDevicePixelRatio(dpr);
+    if (maxWidth <= 64 || it->image.width() <= maxWidth)
+        return it->image;
+
+    const qreal dpr = devicePixelRatioF();
+    const int targetWidth = qRound(maxWidth * dpr);
+    if (it->scaledWidth != targetWidth) {
+        QImage scaled = it->image.scaledToWidth(targetWidth, Qt::SmoothTransformation);
+        scaled.setDevicePixelRatio(dpr);
+        it->scaled = scaled;
+        it->scaledWidth = targetWidth;
     }
-    return image;
+    return it->scaled;
 }
 
 void MarkdownView::onAnchorClicked(const QUrl &url)

@@ -147,6 +147,15 @@ MainWindow::MainWindow(QWidget *parent)
             ui->preview->setFocus();
     });
 
+    // 狀態列右側：游標位置（僅編輯器顯示時）、檔案編碼
+    m_cursorLabel = new QLabel(this);
+    m_cursorLabel->setContentsMargins(8, 0, 8, 0);
+    m_cursorLabel->setMinimumWidth(
+        m_cursorLabel->fontMetrics().horizontalAdvance(tr("行 %1，欄 %2").arg(99999).arg(9999)) + 16);
+    m_cursorLabel->hide();
+    statusBar()->addPermanentWidget(m_cursorLabel);
+    connect(ui->editor, &QPlainTextEdit::cursorPositionChanged, this, &MainWindow::updateCursorPosition);
+
     m_formatLabel = new QLabel(this);
     statusBar()->addPermanentWidget(m_formatLabel);
 
@@ -673,6 +682,7 @@ void MainWindow::toggleEditor(bool visible)
 {
     const double ratio = ui->preview->scrollRatio();
     ui->editor->setVisible(visible);
+    updateCursorPosition();
     if (!visible) {
         ui->preview->setFocus();
         return;
@@ -798,6 +808,20 @@ void MainWindow::updateStatus()
 {
     if (m_formatLabel)
         m_formatLabel->setText(hasDocument() ? m_format.displayName() : QString());
+    updateCursorPosition();
+}
+
+void MainWindow::updateCursorPosition()
+{
+    if (!m_cursorLabel)
+        return;
+    // 只有編輯器顯示時才有游標可言；行／欄皆從 1 起算，欄位以字元計（Tab 算 1 個字元）
+    const bool show = ui->actionToggleEditor->isChecked();
+    m_cursorLabel->setVisible(show);
+    if (!show)
+        return;
+    const QTextCursor c = ui->editor->textCursor();
+    m_cursorLabel->setText(tr("行 %1，欄 %2").arg(c.blockNumber() + 1).arg(c.positionInBlock() + 1));
 }
 
 void MainWindow::addRecentFile(const QString &path)

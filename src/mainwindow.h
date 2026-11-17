@@ -81,6 +81,7 @@ private:
     void setupFileTree();
     void updateTitle();
     void updateStatus();
+    void updateCursorPosition();   // 狀態列：編輯器游標所在的行號與欄位
     void addRecentFile(const QString &path);
     void rebuildRecentMenu();
     void readSettings();
@@ -95,6 +96,7 @@ private:
     QFileSystemWatcher *m_watcher = nullptr;
     MarkdownHighlighter *m_highlighter = nullptr;
     QLabel *m_formatLabel = nullptr;
+    QLabel *m_cursorLabel = nullptr;
 
     QTimer m_renderTimer;   // 編輯時延遲重繪，避免每打一個字就重排
     QTimer m_reloadTimer;   // 合併短時間內多次的檔案變更通知
