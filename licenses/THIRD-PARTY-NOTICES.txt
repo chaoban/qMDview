@@ -10,7 +10,7 @@ third-party components listed below, each under its own license.
 Copyright in those components remains with their respective owners.
 
 ----------------------------------------------------------------------
-1. Qt 6  (Qt Core, Qt Gui, Qt Widgets and their plugins)
+1. Qt 6  (Qt Core, Qt Gui, Qt Widgets, Qt Network and their plugins)
 ----------------------------------------------------------------------
 Copyright (C) The Qt Company Ltd. and other contributors.
 

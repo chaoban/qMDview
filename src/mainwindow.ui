@@ -34,19 +34,22 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QSplitter" name="splitter">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+     <widget class="QTabWidget" name="tabs">
+      <property name="documentMode">
+       <bool>true</bool>
       </property>
-      <property name="childrenCollapsible">
-       <bool>false</bool>
+      <property name="tabsClosable">
+       <bool>true</bool>
       </property>
-      <widget class="QPlainTextEdit" name="editor">
-       <property name="placeholderText">
-        <string>在此輸入 Markdown…</string>
-       </property>
-      </widget>
-      <widget class="MarkdownView" name="preview"/>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <property name="usesScrollButtons">
+       <bool>true</bool>
+      </property>
+      <property name="elideMode">
+       <enum>Qt::ElideNone</enum>
+      </property>
      </widget>
     </item>
     <item>
@@ -367,11 +370,6 @@
   </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>MarkdownView</class>
-   <extends>QTextBrowser</extends>
-   <header>markdownview.h</header>
-  </customwidget>
   <customwidget>
    <class>TocWidget</class>
    <extends>QTreeWidget</extends>

@@ -135,6 +135,41 @@ GitHub（見 2.4 之外的流程）：`git add -A`、`git commit`、`git tag v1.
 
 ---
 
+### 2.7 1.3.0 版：多分頁與只執行一個程式
+
+版本為 1.3.0（MSIX 1.3.0.0）。內容：多個檔案以分頁顯示；在檔案總管雙擊 .md 檔會開在已開啟的視窗（新分頁），不再每個檔案各開一個視窗；「檢視 → 從檔案總管開啟時」可改回每個檔案開新視窗。轉交檔案用的是本機具名管道（QLocalServer），不連網路；沒有新增權限或功能宣告，認證備註（3.8）不需修改。Qt 多了 Qt6Network.dll（windeployqt 自動部署）。
+
+| 步驟 | 在哪裡做 | 內容 |
+|---|---|---|
+| 1 | 電腦（檔案總管） | 雙擊 `qMDView_ms\build_release.bat` → 產出 `dist\qMDView-1.3.0-setup.exe` 與 `dist\qMDView-1.3.0.0-x64.msix`（失敗時看 `dist\build_release.log`） |
+| 2 | 電腦 | 執行 `qMDView-1.3.0-setup.exe` 覆蓋安裝，依下方「測試清單」逐項確認 |
+| 3 | 網頁（Partner Center） | qMDView：上一個提交已完成認證 → 按「Update」建立新提交 |
+| 4 | 網頁（Partner Center）→ Packages | 上傳 `qMDView-1.3.0.0-x64.msix`，舊套件可移除 |
+| 5 | 網頁（Partner Center）→ Store listings | 繁中與英文清單各填 What's new（下方）；描述與 Product features 依 3.7／3.7a 更新（加了多分頁） |
+| 6 | 網頁（Partner Center） | Submit to the Store；認證通常 3 個工作天內 |
+
+**測試清單**（電腦，安裝版與 Store 版各測一次）：
+
+1. 在檔案總管快速連續雙擊 3 個 .md 檔 → 只有一個視窗、3 個分頁
+2. 視窗縮到最小後再雙擊 .md 檔 → 視窗還原並跳到最前面（不是只在工作列閃爍）
+3. 雙擊已開著的檔案 → 切換到該分頁，不重複開
+4. 「檢視 → 從檔案總管開啟時 → 每個檔案開新視窗」→ 雙擊檔案各開一個視窗；改回「在同一個視窗開新分頁」→ 雙擊的檔案又開在這個視窗
+5. 分頁右鍵「在新視窗開啟」→ 開出新視窗，原分頁關閉；有未存變更時先詢問
+6. 兩個分頁都有未存變更時關閉視窗 → 逐一詢問；按「取消」就不關
+7. 結束後重新啟動 → 所有分頁與目前分頁都恢復；從 1.2.0 升級的第一次啟動，原本的檔案也會開回來
+8. 用記事本修改背景分頁的檔案：沒有未存變更的分頁自動更新；有未存變更的分頁出現警告圖示，切過去時詢問
+9. Store 版與安裝版同時安裝時，各自只接收自己的檔案（雙擊時由檔案關聯的那一版開啟）
+10. 「檢視 → 語言」切換後「立即重新啟動」→ 新視窗正常開啟並恢復分頁
+
+**What's new in this version**：
+
+- 繁體中文：`支援多分頁：多個 Markdown 檔案開在同一個視窗的不同分頁，從檔案總管雙擊檔案也會開成新分頁，不再每個檔案各開一個視窗（可在「檢視 → 從檔案總管開啟時」改回開新視窗）。分頁右鍵可關閉其他分頁、複製路徑、在新視窗開啟；重新啟動時恢復所有分頁。`
+- English：`Tabs: multiple Markdown files now open as tabs in one window, including files opened from File Explorer (you can switch back to one window per file in View > When Opening from File Explorer). Right-click a tab to close other tabs, copy the path or open it in a new window. All tabs are restored when you restart.`
+
+GitHub：`git add -A`、`git commit`、`git tag v1.3.0`、`git push`、`git push origin v1.3.0`，Release 附上 `setup.exe`（不放 MSIX）。
+
+---
+
 ## 3. Partner Center 逐項填寫
 
 入口：<https://partner.microsoft.com/dashboard> → **Apps and games**。Partner Center 若顯示中文介面，欄位名稱會不同，以下以英文欄位名稱為主、括號附中文說明。
@@ -242,11 +277,12 @@ qMDView 是一套輕巧、快速的 Markdown 檢視與編輯工具，專為 Wind
 • 即時預覽：標題、清單、待辦清單、表格（含對齊）、程式碼區塊、引用、圖片、水平線，GitHub 風格外觀，自動配合 Windows 深色／淺色主題
 • 編輯＋即時預覽：Ctrl+E 切換左右分割，編輯器有 Markdown 語法上色，左右捲動同步
 • 目錄（TOC）：依標題自動產生大綱，點選即跳轉，捲動時標示目前章節
+• 多分頁：多個檔案開在同一個視窗的不同分頁，從檔案總管雙擊檔案也會開成新分頁
 • 資料夾檔案樹：開啟資料夾後列出所有 Markdown 檔，點選即開啟
 • 檔案監看：檔案被其他程式修改後自動重新載入，編輯中有未存變更時會先詢問
 • 連結：支援中文標題錨點、相對路徑 .md 連結，外部網址以瀏覽器開啟
 • 編碼：自動判斷 UTF-8、UTF-8 BOM、UTF-16、Big5，存檔沿用原本的編碼與換行格式（CRLF／LF）
-• 其他：全文搜尋並醒目提示所有結果、縮放、最近開啟清單、拖放開檔、記住視窗配置與上次開啟的檔案
+• 其他：全文搜尋並醒目提示所有結果、縮放、最近開啟清單、拖放開檔、記住視窗配置與上次開啟的所有分頁
 • 可在 .md／.markdown 檔案的「開啟檔案」清單中直接選用 qMDView
 
 適合用來
@@ -273,6 +309,7 @@ qMDView 只讀寫你自行開啟的本機檔案。不需要帳號、不連線到
 GitHub 風格 Markdown 預覽，支援表格、待辦清單、程式碼區塊與圖片
 編輯與即時預覽左右並排，捲動同步
 依標題自動產生目錄，點選即跳轉
+多分頁顯示，從檔案總管開啟的檔案也開在同一個視窗
 資料夾檔案樹，快速切換多份文件
 檔案被其他程式修改時自動重新載入
 支援中文標題錨點與相對路徑連結
@@ -336,11 +373,12 @@ Key features
 • Live preview: headings, lists, task lists, tables (with alignment), code blocks, block quotes, images and horizontal rules, with a GitHub-style look that follows the Windows dark or light theme
 • Edit with live preview: press Ctrl+E for a side-by-side editor with Markdown syntax highlighting and synchronized scrolling
 • Table of contents: an outline built from the headings; click to jump, and the current section is highlighted as you scroll
+• Tabs: open several files as tabs in one window, including files opened from File Explorer
 • Folder tree: open a folder to list all its Markdown files and switch between them with one click
 • File watching: reloads automatically when another program changes the file, and asks first if you have unsaved edits
 • Links: heading anchors (including non-English headings), relative links to other .md files, and web links opened in your browser
 • Encodings: detects UTF-8, UTF-8 with BOM and UTF-16, falls back to the Windows code page for legacy files, and keeps the original encoding and line endings (CRLF/LF) when saving
-• More: find with all matches highlighted, zoom, recent files, drag and drop, and it remembers the window layout and the last opened file
+• More: find with all matches highlighted, zoom, recent files, drag and drop, and it remembers the window layout and all open tabs
 • Appears in "Open with" for .md and .markdown files
 
 Great for
@@ -365,6 +403,7 @@ This software uses Qt (GNU LGPL v3) and other open-source components. License in
 GitHub-style Markdown preview with tables, task lists, code blocks and images
 Side-by-side editor and live preview with synchronized scrolling
 Table of contents built from headings; click to jump
+Tabs for multiple documents, including files opened from File Explorer
 Folder tree for quick switching between documents
 Automatic reload when another program changes the file
 Heading anchors and relative links between Markdown files

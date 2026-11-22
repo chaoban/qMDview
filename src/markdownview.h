@@ -42,6 +42,7 @@ public:
 
     void setZoomStep(int step);
     int zoomStep() const { return m_zoomStep; }
+    int currentHeading() const { return m_currentHeading; }
 
     // 掃描 Markdown 原始碼，回傳每個標題所在的行號（0 起算），順序與 headings() 一致
     static QList<int> headingSourceLines(const QString &markdown);
@@ -70,7 +71,9 @@ private:
 
     // image 為原圖；scaled 為縮到 scaledWidth（像素）後的版本，寬度沒變就直接重用
     struct CachedImage { QDateTime modified; QImage image; QImage scaled; int scaledWidth = 0; };
-    void trimImageCache(qint64 incomingBytes);
+    // 所有分頁的預覽共用同一份圖片快取（上限 128 MB 是全程式合計，不是每個分頁各 128 MB）
+    static QHash<QString, CachedImage> &imageCache();
+    static void trimImageCache(qint64 incomingBytes);
 
     QString m_markdown;
     QString m_baseDir;
@@ -78,7 +81,6 @@ private:
     int m_currentHeading = -1;
     int m_zoomStep = 0;
     qreal m_basePointSize = 11.0;
-    QHash<QString, CachedImage> m_imageCache;
     bool m_rebuilding = false;
     bool m_hasImages = false;     // 文件含本機圖片：視窗變寬變窄時需重新縮放
     QTimer m_resizeTimer;

@@ -264,15 +264,21 @@ QString MarkdownView::resolveLocalPath(const QUrl &url) const
     return QString(); // http(s) 等遠端資源
 }
 
+QHash<QString, MarkdownView::CachedImage> &MarkdownView::imageCache()
+{
+    static QHash<QString, CachedImage> cache;
+    return cache;
+}
+
 void MarkdownView::trimImageCache(qint64 incomingBytes)
 {
     // 圖片快取上限 128 MB（原圖＋縮圖）；超過就整批淘汰舊的，下次重繪再載入
     constexpr qint64 kMaxBytes = 128LL * 1024 * 1024;
     qint64 total = incomingBytes;
-    for (const CachedImage &c : std::as_const(m_imageCache))
+    for (const CachedImage &c : std::as_const(imageCache()))
         total += c.image.sizeInBytes() + c.scaled.sizeInBytes();
     if (total > kMaxBytes)
-        m_imageCache.clear();
+        imageCache().clear();
 }
 
 QVariant MarkdownView::loadResource(int type, const QUrl &name)
@@ -290,13 +296,14 @@ QVariant MarkdownView::loadResource(int type, const QUrl &name)
 
     m_hasImages = true;
     const QString key = fi.absoluteFilePath();
-    auto it = m_imageCache.find(key);
-    if (it == m_imageCache.end() || it->modified != fi.lastModified()) {
+    QHash<QString, CachedImage> &cache = imageCache();
+    auto it = cache.find(key);
+    if (it == cache.end() || it->modified != fi.lastModified()) {
         QImage loaded;
         if (!loaded.load(key))
             return QVariant();
         trimImageCache(loaded.sizeInBytes());
-        it = m_imageCache.insert(key, CachedImage{ fi.lastModified(), loaded, QImage(), 0 });
+        it = cache.insert(key, CachedImage{ fi.lastModified(), loaded, QImage(), 0 });
     }
 
     // 太寬的圖縮到視窗寬度（依螢幕 DPI 保留清晰度）。

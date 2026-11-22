@@ -7,14 +7,16 @@
 | 功能 | 說明 |
 |---|---|
 | Markdown 顯示 | 標題、清單、待辦清單、表格（含對齊）、程式碼區塊、引用、圖片、水平線；GitHub 風格外觀，自動適應深色／淺色主題 |
-| 資料夾檔案樹 | 開啟資料夾後列出所有 `.md` 檔，點選即開啟 |
+| 多分頁 | 每個檔案開一個分頁；同一個檔案已開著就切換過去。分頁右鍵：關閉、關閉其他、關閉右側、複製路徑、在檔案總管中顯示、在新視窗開啟；中鍵關閉分頁；不同資料夾的同名檔案在標題加上資料夾名稱 |
+| 只執行一個程式 | 在檔案總管雙擊多個 `.md` 檔，都會開在同一個視窗的不同分頁，並把視窗帶到最前面；「檢視 › 從檔案總管開啟時」可改回每個檔案開新視窗 |
+| 資料夾檔案樹 | 開啟資料夾後列出所有 `.md` 檔，點選即開啟（已開著的切換到該分頁） |
 | 目錄（TOC） | 依標題產生大綱，點選跳轉；捲動時自動標示目前章節 |
 | 編輯＋即時預覽 | `Ctrl+E` 切換；左邊編輯（含語法上色）、右邊預覽，捲動同步 |
-| 檔案監看 | 檔案被其他程式修改後自動重新載入；編輯中有未存變更時會先詢問 |
+| 檔案監看 | 檔案被其他程式修改後自動重新載入（背景分頁也會）；有未存變更時會先詢問，背景分頁則在分頁上顯示警告圖示，切換過去時再詢問 |
 | 連結 | `#標題` 錨點（支援中文）、相對路徑 `.md` 連結（可帶 `#錨點`）、外部網址以瀏覽器開啟 |
 | 游標位置 | 編輯模式下，狀態列右側顯示目前游標所在的行號與欄位（例如「行 12，欄 5」） |
 | 編碼 | 自動判斷 UTF-8／UTF-8 BOM／UTF-16／系統編碼（Big5），存檔沿用原編碼與換行（CRLF/LF） |
-| 其他 | 搜尋（全部醒目提示）、縮放、最近開啟清單、拖放開檔、記住視窗配置與上次開啟的檔案；「檔案 › 關閉檔案」關閉後，下次啟動只開回資料夾、不再自動載入該檔 |
+| 其他 | 搜尋（全部醒目提示）、縮放、最近開啟清單、拖放開檔（可一次多個）、記住視窗配置與上次開啟的所有分頁；「檔案 › 關閉檔案」關閉目前分頁，下次啟動不再自動載入該檔 |
 | 介面語言 | 繁體中文、English；預設跟隨 Windows 顯示語言（其他語言顯示英文），可在「檢視 › 語言」切換，重新啟動後套用 |
 
 ## 建置
@@ -106,9 +108,11 @@ qMDView/
 │  ├─ qMDView.iss               Inno Setup 安裝程式腳本
 │  └─ ChineseTraditional.isl    安裝畫面繁中翻譯（給 Inno Setup 6 用；7 已內建）
 ├─ src/
-│  ├─ main.cpp                  進入點、命令列參數、載入介面語言
+│  ├─ main.cpp                  進入點、命令列參數（--new-window）、載入介面語言、只執行一個程式
 │  ├─ uilanguage.h / .cpp       介面語言：支援清單、依設定／系統語系選擇、載入翻譯
-│  ├─ mainwindow.ui / .h / .cpp 主視窗（選單、工具列、面板、開存檔、監看、搜尋、設定）
+│  ├─ mainwindow.ui / .h / .cpp 主視窗（選單、工具列、面板、分頁管理、開存檔、監看、搜尋、設定）
+│  ├─ documenttab.h / .cpp      一個分頁＝一份文件：編輯器＋預覽、檔案路徑與編碼、拖放
+│  ├─ singleinstance.h / .cpp   只執行一個程式：QLocalServer／QLocalSocket 轉交檔案路徑
 │  ├─ markdownview.h / .cpp     預覽元件（QTextBrowser 子類）：渲染、圖片、連結、標題擷取
 │  ├─ markdownstyler.h / .cpp   渲染後的外觀調整（程式碼框、表格、引用、行高）
 │  ├─ markdownhighlighter.*     編輯器語法上色
@@ -135,7 +139,8 @@ qMDView/
 | 支援的介面語言 | `src/uilanguage.cpp` 的 `available()`＋`CMakeLists.txt` 的 `TS_FILES`＋`msix/AppxManifest.xml.in` 的 `<Resources>` |
 | 發行者名稱、著作權年份、聯絡信箱 | `CMakeLists.txt` 的 `APP_PUBLISHER`／`APP_COPYRIGHT_YEAR`／`APP_CONTACT_EMAIL`（程式與 exe 版本資訊），以及 `installer/qMDView.iss` 開頭的 `AppPublisher`／`AppContact`（安裝程式） |
 | 「關於」對話框的 logo | `resources/images/saisai_logo.png`（直接替換同名檔案） |
-| 編輯時預覽的更新延遲 | `MainWindow` 建構子的 `m_renderTimer.setInterval(250)` |
+| 編輯時預覽的更新延遲 | `DocumentTab` 建構子的 `m_renderTimer.setInterval(250)` |
+| 分頁右鍵選單 | `MainWindow::showTabContextMenu()` |
 
 ## 快捷鍵
 
@@ -144,7 +149,8 @@ qMDView/
 | 開啟檔案／資料夾 | `Ctrl+O` ／ `Ctrl+Shift+O` |
 | 新增／儲存／另存 | `Ctrl+N` ／ `Ctrl+S` ／ `Ctrl+Shift+S` |
 | 重新載入 | `F5` |
-| 關閉檔案 | `Ctrl+W` ／ `Ctrl+F4` |
+| 關閉檔案（目前分頁） | `Ctrl+W` ／ `Ctrl+F4`、在分頁上按滑鼠中鍵 |
+| 下一個／上一個分頁 | `Ctrl+Tab`、`Ctrl+PgDn` ／ `Ctrl+Shift+Tab`、`Ctrl+PgUp` |
 | 編輯模式 | `Ctrl+E` |
 | 搜尋／下一個／上一個 | `Ctrl+F` ／ `F3`、`Enter` ／ `Shift+F3`、`Shift+Enter` |
 | 放大／縮小／原始大小 | `Ctrl++`、`Ctrl+滾輪` ／ `Ctrl+-` ／ `Ctrl+0` |

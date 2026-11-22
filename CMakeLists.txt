@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(qMDView VERSION 1.2.0 LANGUAGES CXX)
+project(qMDView VERSION 1.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,13 +20,18 @@ set(APP_COPYRIGHT "Copyright (C) ${APP_COPYRIGHT_YEAR} ${APP_PUBLISHER}")
 
 # QTextDocument::setMarkdown 需要 Qt 5.14+；本專案使用 Qt 6 API（QStringDecoder 等）
 # LinguistTools：介面翻譯工具（lupdate / lrelease），Qt 安裝時已附帶
-find_package(Qt6 6.2 REQUIRED COMPONENTS Widgets LinguistTools)
+# Network：QLocalServer / QLocalSocket，用於「只執行一個程式」（把檔案轉交給已開啟的視窗）
+find_package(Qt6 6.2 REQUIRED COMPONENTS Widgets Network LinguistTools)
 
 set(PROJECT_SOURCES
     src/main.cpp
     src/mainwindow.h
     src/mainwindow.cpp
     src/mainwindow.ui
+    src/documenttab.h
+    src/documenttab.cpp
+    src/singleinstance.h
+    src/singleinstance.cpp
     src/markdownview.h
     src/markdownview.cpp
     src/markdownstyler.h
@@ -65,7 +70,11 @@ qt_add_translations(qMDView
     TS_FILES translations/qMDView_en.ts
     RESOURCE_PREFIX "/i18n"
 )
-target_link_libraries(qMDView PRIVATE Qt6::Widgets)
+target_link_libraries(qMDView PRIVATE Qt6::Widgets Qt6::Network)
+if(WIN32)
+    # AllowSetForegroundWindow：轉交檔案時讓原本的視窗能跳到最前面
+    target_link_libraries(qMDView PRIVATE user32)
+endif()
 
 target_compile_definitions(qMDView PRIVATE
     APP_VERSION="${PROJECT_VERSION}"
