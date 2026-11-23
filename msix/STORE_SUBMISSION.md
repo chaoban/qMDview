@@ -170,6 +170,36 @@ GitHub：`git add -A`、`git commit`、`git tag v1.3.0`、`git push`、`git push
 
 ---
 
+### 2.8 1.3.1 版：修正表格中 `<br>` 造成內容消失
+
+版本為 1.3.1（MSIX 1.3.1.0）。修正：文件中出現沒寫斜線的 HTML 空元素（最常見的是表格儲存格內用 `<br>` 換行，另有 `<hr>`、`<img ...>`）時，Qt 的 Markdown 引擎會把之後所有文字吞掉，預覽中表格只剩空格子、後面的段落與標題消失。現在解析前會自動補成 `<br />`；程式碼區塊與行內程式碼保持原樣。只改預覽，不改檔案內容。沒有新增權限或功能宣告，認證備註（3.8）與商店描述不需修改。
+
+| 步驟 | 在哪裡做 | 內容 |
+|---|---|---|
+| 1 | 電腦（檔案總管） | 雙擊 `qMDView_ms\build_release.bat` → 產出 `dist\qMDView-1.3.1-setup.exe` 與 `dist\qMDView-1.3.1.0-x64.msix`（失敗時看 `dist\build_release.log`） |
+| 2 | 電腦 | 執行 `qMDView-1.3.1-setup.exe` 覆蓋安裝，依下方「測試清單」逐項確認 |
+| 3 | 網頁（Partner Center） | qMDView：上一個提交（1.3.0）已完成認證 → 按「Update」建立新提交；1.3.0 還沒送出 → 直接在該提交把套件換成 1.3.1 |
+| 4 | 網頁（Partner Center）→ Packages | 上傳 `qMDView-1.3.1.0-x64.msix`，舊套件可移除 |
+| 5 | 網頁（Partner Center）→ Store listings | 繁中與英文清單各填 What's new（下方）；1.3.0 未上架就併在一起寫 |
+| 6 | 網頁（Partner Center） | Submit to the Store；認證通常 3 個工作天內 |
+
+**測試清單**（電腦；測試檔在 `dist\t131`）：
+
+1. 開 `ccar_p_plan.md` → 第 3 節的 6 張月份表格都有內容，「週次／日期」欄顯示 W01、日期、11h 三行；一路捲到最後一行「最後更新：2026-11-23…」
+2. 目錄（Ctrl+2）列出「第 1 月」到「第 6 月」與第 4～8 節
+3. 開 `html_void_test.md` → 依檔內每一節寫的「預期結果」逐項確認（`<BR>`、`<hr>`、`<img>`、屬性含 `>`、程式碼區塊與行內程式碼保持原樣、`\<br>` 跳脫）
+4. `Ctrl+E` 開編輯器 → 編輯器裡仍是原本的 `<br>`（檔案沒有被改）；在表格儲存格輸入新的 `<br>`，預覽即時正確
+5. 1.3.0 的功能抽測：雙擊兩個 .md 檔 → 同一視窗兩個分頁；重新啟動後分頁恢復
+
+**What's new in this version**：
+
+- 繁體中文：`修正：表格或段落中使用 <br> 換行時，預覽中其後的內容會消失（表格只剩空格子）。`
+- English：`Fixed: content after a <br> line break (for example inside a table cell) no longer disappears from the preview.`
+
+GitHub：先雙擊 `dist\git_push.bat`（commit＋push main），確認 `dist\git_push.log` 最後一行是 `RESULT=OK`，再雙擊 `dist\git_tag.bat`（建立並推送 tag v1.3.1，看 `dist\git_tag.log`）。Release 附上 `setup.exe`（不放 MSIX）。
+
+---
+
 ## 3. Partner Center 逐項填寫
 
 入口：<https://partner.microsoft.com/dashboard> → **Apps and games**。Partner Center 若顯示中文介面，欄位名稱會不同，以下以英文欄位名稱為主、括號附中文說明。

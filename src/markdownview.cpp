@@ -27,6 +27,153 @@ int frontMatterLength(const QString &md)
     return m.hasMatch() ? int(m.capturedEnd()) : 0;
 }
 
+// ── HTML 空元素補斜線 ────────────────────────────────────────────────
+// Qt 的 Markdown 匯入器（QTextMarkdownImporter）遇到行內 HTML 時，以「開啟標籤數 − 關閉標籤數」
+// 判斷 HTML 是否結束，只有寫成 <br/> 才算自我關閉。HTML 空元素 <br>、<hr>、<img ...> 不寫斜線時
+// 會被當成「開了沒關」，計數永遠不歸零，之後所有一般文字都被收進 HTML 暫存而不顯示
+// （表格儲存格全空、後面的段落與標題消失）。解析前把這些標籤補成 <br /> 形式；
+// 屬性值內的 < > 改成 &lt; &gt;，否則 Qt 會把引號內的 > 當成標籤結尾。
+// 程式碼區塊（圍欄、縮排）與行內程式碼要原樣顯示，不處理；\<br> 是跳脫的字面文字，也不處理。
+
+QString closeVoidTagsInText(const QString &text)
+{
+    static const QRegularExpression voidTag(
+        QStringLiteral("(?<!\\\\)<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)"
+                       "((?:\\s+[A-Za-z_:][-A-Za-z0-9_.:]*"
+                       "(?:\\s*=\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s\"'=<>`]+))?)*)\\s*>"),
+        QRegularExpression::CaseInsensitiveOption);
+
+    if (!text.contains(QLatin1Char('<')))
+        return text;
+
+    QString out;
+    qsizetype last = 0;
+    QRegularExpressionMatchIterator it = voidTag.globalMatch(text);
+    while (it.hasNext()) {
+        const QRegularExpressionMatch m = it.next();
+        QString attrs = m.captured(2);
+        attrs.replace(QLatin1Char('<'), QLatin1String("&lt;"));
+        attrs.replace(QLatin1Char('>'), QLatin1String("&gt;"));
+        out += QStringView(text).mid(last, m.capturedStart() - last);
+        out += QLatin1Char('<');
+        out += m.captured(1);
+        out += attrs;
+        out += QLatin1String(" />");
+        last = m.capturedEnd();
+    }
+    if (last == 0) // 沒有需要修改的標籤
+        return text;
+    out += QStringView(text).mid(last);
+    return out;
+}
+
+// 處理一行：行內程式碼（成對、長度相同的反引號之間）保持原樣，其餘部分補斜線
+QString closeVoidTagsInLine(const QString &row)
+{
+    const QChar tick(QLatin1Char('`'));
+    const qsizetype n = row.size();
+    QString out;
+    qsizetype seg = 0;
+    qsizetype pos = 0;
+    while (pos < n) {
+        if (row.at(pos) != tick) {
+            ++pos;
+            continue;
+        }
+        qsizetype runEnd = pos;
+        while (runEnd < n && row.at(runEnd) == tick)
+            ++runEnd;
+        const qsizetype len = runEnd - pos;
+
+        qsizetype close = -1;
+        for (qsizetype s = row.indexOf(tick, runEnd); s >= 0;) {
+            qsizetype e = s;
+            while (e < n && row.at(e) == tick)
+                ++e;
+            if (e - s == len) {
+                close = s;
+                break;
+            }
+            s = row.indexOf(tick, e);
+        }
+        if (close < 0) { // 沒有配對的反引號是一般文字
+            pos = runEnd;
+            continue;
+        }
+        out += closeVoidTagsInText(row.mid(seg, pos - seg));
+        out += QStringView(row).mid(pos, close + len - pos);
+        seg = pos = close + len;
+    }
+    out += closeVoidTagsInText(row.mid(seg));
+    return out;
+}
+
+// 行首縮排寬度（Tab 對齊到 4 的倍數）
+int indentWidth(const QString &row)
+{
+    int w = 0;
+    for (const QChar ch : row) {
+        if (ch == QLatin1Char(' '))
+            ++w;
+        else if (ch == QLatin1Char('\t'))
+            w = (w / 4 + 1) * 4;
+        else
+            break;
+    }
+    return w;
+}
+
+QString closeVoidHtmlTags(const QString &md)
+{
+    if (!md.contains(QLatin1Char('<')))
+        return md;
+
+    static const QRegularExpression fence(QStringLiteral("^[ \\t]*(`{3,}|~{3,})"));
+    static const QRegularExpression listItem(QStringLiteral("^ {0,3}([-*+]|\\d{1,9}[.)])([ \\t]|$)"));
+
+    QStringList rows = md.split(QLatin1Char('\n'));
+    QString openFence;           // 目前所在圍欄程式碼區塊的開頭符號（空字串＝不在區塊內）
+    bool prevBlank = true;       // 縮排程式碼區塊只能接在空行（或文件開頭）之後
+    bool inIndentedCode = false;
+    bool inList = false;         // 清單內縮排 4 格以上是續行，不是程式碼
+    for (QString &row : rows) {
+        const int indent = indentWidth(row);
+        const QRegularExpressionMatch fm = fence.match(row);
+        const bool isFence = fm.hasMatch() && (indent <= 3 || inList);
+
+        if (!openFence.isEmpty()) { // 圍欄程式碼區塊內：只找結束圍欄
+            if (isFence && fm.capturedView(1).front() == openFence.front()
+                && fm.capturedLength(1) >= openFence.size())
+                openFence.clear();
+            continue;
+        }
+        if (row.trimmed().isEmpty()) {
+            prevBlank = true;
+            continue;
+        }
+        const bool wasBlank = prevBlank;
+        prevBlank = false;
+
+        const bool indented = indent >= 4;
+        if (inIndentedCode && !indented)
+            inIndentedCode = false;
+        if (!inIndentedCode && indented && wasBlank && !inList)
+            inIndentedCode = true;
+        if (inIndentedCode)
+            continue;
+
+        if (isFence) {
+            openFence = fm.captured(1);
+            continue;
+        }
+        if (!indented)
+            inList = listItem.match(row).hasMatch() || (inList && !wasBlank);
+        if (row.contains(QLatin1Char('<')))
+            row = closeVoidTagsInLine(row);
+    }
+    return rows.join(QLatin1Char('\n'));
+}
+
 bool isMarkdownSuffix(const QString &suffix)
 {
     static const QStringList md = { QStringLiteral("md"), QStringLiteral("markdown"),
@@ -96,7 +243,8 @@ void MarkdownView::rebuild()
     doc->setBaseUrl(m_baseDir.isEmpty()
                         ? QUrl()
                         : QUrl::fromLocalFile(QDir(m_baseDir).absolutePath() + QLatin1Char('/')));
-    doc->setMarkdown(m_markdown.mid(frontMatterLength(m_markdown)),
+    // closeVoidHtmlTags：<br> 等不寫斜線的 HTML 空元素會讓 Qt 吞掉之後所有文字，先補成 <br />
+    doc->setMarkdown(closeVoidHtmlTags(m_markdown.mid(frontMatterLength(m_markdown))),
                      QTextDocument::MarkdownDialectGitHub);
 
     MarkdownStyler::apply(doc, palette(), QFontDatabase::systemFont(QFontDatabase::FixedFont));

@@ -159,7 +159,7 @@ qMDView/
 ## 已知限制（Qt 內建 Markdown 引擎）
 
 - 預覽中的程式碼沒有語法上色；不支援 Mermaid、LaTeX 數學式
-- 內嵌 HTML 只支援 Qt RichText 子集
+- 內嵌 HTML 只支援 Qt RichText 子集；`<br>`、`<img ...>` 等沒寫斜線的空元素會在解析前自動補成 `<br />`（Qt 引擎原本會把其後的文字整段吞掉，1.3.1 起修正，見 `MarkdownView` 的 `closeVoidHtmlTags()`）
 - 不下載網路圖片，只顯示本機圖片
 - 引用（`>`）內的程式碼區塊不會加框
 - 文件很大（數千行）時，編輯模式每次重繪約 0.1～0.2 秒
